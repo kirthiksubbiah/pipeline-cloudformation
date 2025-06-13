@@ -15,6 +15,10 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "Stack-VPC-${AWS::Region}"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -26,6 +30,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "PublicSubnet1"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -37,6 +45,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "PublicSubnet2"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -48,6 +60,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "PrivateSubnet1"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -59,6 +75,10 @@ Resources:
       Tags:
         - Key: Name
           Value: "PrivateSubnet2"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
 
   MySecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -77,3 +97,7 @@ Resources:
       Tags:
         - Key: Name
           Value: "WebSecurityGroup"
+        - Key: Project
+          Value: ECS-Cluster
+        - Key: Environment
+          Value: Dev
