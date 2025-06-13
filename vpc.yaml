@@ -1,103 +1,133 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: StackSet template to create a basic VPC with public and private subnets and a security group
+Description: Create ECS Cluster with VPC, Subnets, and Networking
 
 Parameters:
   VPCCidr:
     Type: String
     Default: 10.0.0.0/16
-    Description: CIDR block for the VPC
+  PublicSubnet1Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+  PublicSubnet2Cidr:
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnet1Cidr:
+    Type: String
+    Default: 10.0.3.0/24
+  PrivateSubnet2Cidr:
+    Type: String
+    Default: 10.0.4.0/24
 
 Resources:
+
   MyVPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Sub "Stack-VPC-${AWS::Region}"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: ECS-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: ECS-Public-RT
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.1.0/24
-      AvailabilityZone: !Select [1, !GetAZs '']
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Ref PublicSubnet1Cidr
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: "PublicSubnet1"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-Public-Subnet-1
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.2.0/24
       AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Ref PublicSubnet2Cidr
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: "PublicSubnet2"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-Public-Subnet-2
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.3.0/24
-      AvailabilityZone: !Select [1, !GetAZs '']
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Ref PrivateSubnet1Cidr
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: "PrivateSubnet1"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-Private-Subnet-1
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.4.0/24
       AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Ref PrivateSubnet2Cidr
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: "PrivateSubnet2"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-Private-Subnet-2
 
-  MySecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  Subnet1RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      GroupDescription: Allow SSH and HTTP access
-      VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet2RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: ECS-Demo-Cluster
       Tags:
         - Key: Name
-          Value: "WebSecurityGroup"
-        - Key: Project
-          Value: ECS-Cluster
-        - Key: Environment
-          Value: Dev
+          Value: ECS-Demo-Cluster
+
+Outputs:
+  VPCId:
+    Description: The VPC ID
+    Value: !Ref MyVPC
+
+  ECSClusterName:
+    Description: ECS Cluster Name
+    Value: !Ref ECSCluster
