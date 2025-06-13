@@ -1,0 +1,9 @@
+{
+  "Parameters": {
+    "VPCCidr": "10.4.0.0/16",
+    "PublicSubnetCidr1": "10.4.1.0/24",
+    "PublicSubnetCidr2": "10.4.2.0/24",
+    "PrivateSubnetCidr1": "10.4.3.0/24",
+    "PrivateSubnetCidr2": "10.4.4.0/24"
+  }
+}
